@@ -1,0 +1,34 @@
+name: Deploy to server
+
+# Deploys on every push to master. You can also run it manually
+# from the Actions tab via the "Run workflow" button.
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy html/ via rsync over SSH
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          # -a archive, -v verbose, -z compress, -r recursive.
+          # --checksum: compare file CONTENT (hash) not timestamp, so only
+          #   genuinely-changed files transfer.
+          # --delete: mirror git exactly — files removed from git are also
+          #   removed from the server (full create/edit/delete sync).
+          # --exclude-from=.rsyncignore: protect server-only files (images,
+          #   videos, .env) from being deleted, since they are gitignored.
+          switches: -rlvz --checksum --omit-dir-times
+          # Trailing slash = copy the CONTENTS of html/ into remote_path.
+          path: html/
+          remote_path: /var/www/mobiads/html
+          remote_host: 34.87.16.111
+          remote_port: 22
+          remote_user: lipilogicillp
+          remote_key:  ${{ secrets.SSH_KEY }}
